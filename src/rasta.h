@@ -12,7 +12,9 @@
 #include <algorithm>
 #include <string>
 #include "FreeImage.h"
+#ifdef USE_ALLEGRO
 #include <allegro.h> 
+#endif
 #include "CommandLineParser.h"
 #include <assert.h>
 #include "config.h"
@@ -25,6 +27,15 @@ typedef long long distance_accum_t;
 typedef unsigned short distance_t;
 typedef distance_t (fn_rgb_distance)(const rgb &col1, const rgb &col2);
 typedef fn_rgb_distance *f_rgb_distance;
+#ifndef USE_ALLEGRO
+typedef struct {} PALETTE;
+typedef struct {
+	int w, h;
+	int *pixels;
+} BITMAP;
+typedef DWORD uint32_t;
+typedef unsigned char uint8_t;
+#endif
 
 // CPU registers
 

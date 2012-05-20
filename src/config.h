@@ -4,7 +4,9 @@
 #include <vector>
 #include <string>
 #include "FreeImage.h"
+#ifdef USE_ALLEGRO
 #include <allegro.h> 
+#endif
 #include "CommandLineParser.h"
 #include <assert.h>
 #include "rgb.h"

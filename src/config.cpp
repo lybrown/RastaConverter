@@ -136,6 +136,11 @@ void Configuration::Process(int argc, char *argv[])
 	string height_value = parser.getValue("h","240");
 	height=String2Value<int>(height_value);
 
-	string max_evals_value = parser.getValue("max_evals","2000000000");
+#ifdef USE_ALLEGRO
+#define DEFAULT_MAX_EVALS "2000000000"
+#else
+#define DEFAULT_MAX_EVALS "5000"
+#endif
+	string max_evals_value = parser.getValue("max_evals",DEFAULT_MAX_EVALS);
 	max_evals=String2Value<unsigned>(max_evals_value);
 }

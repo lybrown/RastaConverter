@@ -18,7 +18,9 @@ const char *program_version="Beta3";
 #include <algorithm>
 #include <string>
 #include "FreeImage.h"
+#ifdef USE_ALLEGRO
 #include <allegro.h> 
+#endif
 #include "CommandLineParser.h"
 #include "string_conv.h"
 #include <assert.h>
@@ -32,9 +34,68 @@ const char *program_version="Beta3";
 #include <iomanip>
 #include <iterator>
 #include <unordered_map>
+#include <stdarg.h>
+#include <varargs.h>
 
 #include "rasta.h"
 #include "main.h"
+
+#ifndef USE_ALLEGRO
+static BITMAP *create_bitmap_ex(int depth, int width, int height)
+{
+	BITMAP *bitmap = new BITMAP;
+	bitmap->w = width;
+	bitmap->h = height;
+	bitmap->pixels = new int[width*height];
+	return bitmap;
+}
+
+static int getpixel(BITMAP *bitmap, int x, int y)
+{
+	return bitmap->pixels[x+y*bitmap->w];
+}
+
+static void putpixel(BITMAP *bitmap, int x, int y, int c)
+{
+	bitmap->pixels[x+y*bitmap->w] = c;
+}
+
+static int getr(int color)
+{
+	return ((rgb*)&color)->r;
+}
+
+static int getg(int color)
+{
+	return ((rgb*)&color)->g;
+}
+
+static int getb(int color)
+{
+	return ((rgb*)&color)->b;
+}
+
+static int makecol(int r, int g, int b)
+{
+	rgb col;
+	col.r = r;
+	col.g = g;
+	col.b = b;
+	return *((int*)&col);
+}
+
+static void stretch_blit(BITMAP *src, BITMAP *dst,
+    int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh)
+{
+	float rx = (float)sw / dw;
+	float ry = (float)sh / dh;
+	for (int x = dx; x < dx+dw; ++x) {
+		for (int y = dy; y < dy+dh; ++y) {
+			putpixel(dst, rx * x, ry * y, getpixel(src, x, y));
+		}
+	}
+}
+#endif
 
 // Cycle where WSYNC starts - 105?
 #define WSYNC_START 104
@@ -49,22 +110,49 @@ extern bool operator<(const rgb &l, const rgb &r);
 
 void quit_function(void)
 {
+#ifdef USE_ALLEGRO
 	allegro_exit();
+#endif
 	exit(0);
 }
 
 void error(char *e)
 {
+#ifdef USE_ALLEGRO
 	allegro_message(e);
 	allegro_exit();
+#else
+	printf("%s\n", e);
+#endif
 	exit(1);
 }
 
 void error(char *e, int i)
 {
+#ifdef USE_ALLEGRO
 	allegro_message("%s %d",e,i);
 	allegro_exit();
+#else
+	printf("%s %d\n", e, i);
+#endif
 	exit(1);
+}
+
+void fmtmessage(int x, int y, char* fmt, ...)
+{
+	char buf[1024];
+	va_list args;
+
+	va_start(args, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, args);
+	va_end(args);
+
+#if USE_ALLEGRO
+	textprintf_ex(screen, font, x, y, makecol(0xF0,0xF0,0xF0), 0, "%s", buf);
+#else
+	printf("%s\n", buf);
+	fflush(stdout);
+#endif
 }
 
 int random(int range)
@@ -89,16 +177,19 @@ f_rgb_distance distance_function;
 
 void Message(char *message)
 {
+#ifdef USE_ALLEGRO
 	rectfill(screen,0,440,640,460,0);
-	textprintf_ex(screen, font, 0, 440, makecol(0xF0,0xF0,0xF0), 0, "%s", message);
+#endif
+	fmtmessage(0, 440, "%s", message);
 }
 
 void Message(char *message, int i)
 {
+#ifdef USE_ALLEGRO
 	rectfill(screen,0,440,640,460,0);
-	textprintf_ex(screen, font, 0, 440, makecol(0xF0,0xF0,0xF0), 0, "%s %d", message,i);
+#endif
+	fmtmessage(0, 440, "%s %d", message, i);
 }
-
 
 using namespace std;
 using namespace Epoch::Foundation;
@@ -572,7 +663,9 @@ bool RastaConverter::LoadInputBitmap()
 
 	FreeImage_FlipVertical(fbitmap);
 
+#if USE_ALLEGRO
 	set_palette(palette);
+#endif
 	input_bitmap  = create_bitmap_ex(screen_color_depth,cfg.width,cfg.height);
 	output_bitmap  = create_bitmap_ex(screen_color_depth,cfg.width,cfg.height);
 	destination_bitmap  = create_bitmap_ex(screen_color_depth,cfg.width,cfg.height);
@@ -619,6 +712,7 @@ void RastaConverter::InitLocalStructure()
 
 	line_caches.resize(m_height);
 
+#ifdef USE_ALLEGRO
 	clear_bitmap(screen);
 	// Show our picture
 	if (desktop_width>=320*3)
@@ -635,7 +729,7 @@ void RastaConverter::InitLocalStructure()
 		textprintf_ex(screen, font, input_bitmap->w, input_bitmap->h+10, makecol(0x80,0x80,0x80), 0, "Current output");
 		textprintf_ex(screen, font, input_bitmap->w*2, input_bitmap->h+10, makecol(0x80,0x80,0x80), 0, "Destination");
 	}
-
+#endif
 }
 
 void RastaConverter::GeneratePictureErrorMap()
@@ -776,10 +870,12 @@ void RastaConverter::PrepareDestinationPicture()
 		}
 	}
 
+#ifdef USE_ALLEGRO
 	if (desktop_width>=320*3)
 		stretch_blit(destination_bitmap,screen,0,0,destination_bitmap->w,destination_bitmap->h,input_bitmap->w*4,0,destination_bitmap->w*2,destination_bitmap->h);
 	else
 		blit(destination_bitmap,screen,0,0,input_bitmap->w*2,0,destination_bitmap->w,destination_bitmap->h);
+#endif
 
 	if (cfg.dither)
 	{
@@ -1543,10 +1639,12 @@ void RastaConverter::FindPossibleColors()
 	{
 		vector < unsigned char > vector_of_colors;
 #if 1
+#ifdef USE_ALLEGRO
 		if (desktop_width>=320*3)
 			hline(screen,m_width*2,l,m_width*4,makecol(0xFF,0xFF,0xFF));
 		else
 			hline(screen,m_width,l,m_width*2,makecol(0xFF,0xFF,0xFF));
+#endif
 
 		for (int x=0;x<m_width;++x)
 			set_of_colors.insert(FindAtariColorIndex(m_picture[l][x])*2);				
@@ -1564,7 +1662,7 @@ void RastaConverter::Init()
 {
 	init_finished=false;
 
-	textprintf_ex(screen, font, 0, 300, makecol(0xF0,0xF0,0xF0), 0, "Choosing start point(s)");
+	fmtmessage(0, 300, "Choosing start points(s)");
 
 	evaluations=0;
 	last_best_evaluation=0;
@@ -1897,7 +1995,7 @@ void RastaConverter::ShowMutationStats()
 	}
 	for (int i=0;i<E_MUTATION_MAX;++i)
 	{
-		textprintf_ex(screen, font, 0, 330+10*i, makecol(0xF0,0xF0,0xF0), 0, "%s  %d", mutation_names[i],m_mutation_stats[i]);
+		fmtmessage(0, 330+10*i, "%s  %d", mutation_names[i],m_mutation_stats[i]);
 	}
 
 }
@@ -1961,17 +2059,22 @@ void RastaConverter::FindBestSolution()
 	map < double, raster_picture >::iterator m,_m;
 	m_currently_mutated_y=0;
 
-	textprintf_ex(screen, font, 0, 280, makecol(0xF0,0xF0,0xF0), 0, "Press 'S' to save.");
-	textprintf_ex(screen, font, 0, 300, makecol(0xF0,0xF0,0xF0), 0, "Evaluations: %u", evaluations);
+	fmtmessage(0, 280, "Press 'S' to save.");
+	fmtmessage(0, 300, "Evaluations: %u", evaluations);
 
 	unsigned last_eval = 0;
 	bool clean_first_evaluation = cfg.continue_processing;
 	clock_t last_rate_check_time = clock();
-	
+
+#ifdef USE_ALLEGRO
 	while(!key[KEY_ESC] && !user_closed_app && evaluations < cfg.max_evals)
+#else
+	while(evaluations < cfg.max_evals)
+#endif
 	{
 		for (m=m_solutions.begin(),_m=m_solutions.end();m!=_m;++m)
 		{
+#ifdef USE_ALLEGRO
 			if (key[KEY_S] || key[KEY_D])
 			{
 				SaveBestSolution();
@@ -1979,6 +2082,7 @@ void RastaConverter::FindBestSolution()
 				Wait(2);
 				Message("Saved.               ");
 			}
+#endif
 			double current_distance=m->first;
 			raster_picture new_picture(m_height);
 			new_picture=m->second;
@@ -2015,8 +2119,8 @@ void RastaConverter::FindBestSolution()
 				}
 
 				last_eval = evaluations;
-				textprintf_ex(screen, font, 0, 300, makecol(0xF0,0xF0,0xF0), 0, "Evaluations: %8u  LastBest: %8u  Solutions: %d  Cached insns: %8u Rate: %6.1f", evaluations,last_best_evaluation,(int) m_solutions.size(), line_cache_insn_pool_level, rate);
-				textprintf_ex(screen, font, 0, 310, makecol(0xF0,0xF0,0xF0), 0, "Norm. Dist: %f", NormalizeScore(m_solutions.begin()->first));
+				fmtmessage(0, 300, "Evaluations: %8u  LastBest: %8u  Solutions: %d  Cached insns: %8u Rate: %6.1f", evaluations,last_best_evaluation,(int) m_solutions.size(), line_cache_insn_pool_level, rate);
+				fmtmessage(0, 310, "Norm. Dist: %f", NormalizeScore(m_solutions.begin()->first));
 			}
 
 			// store this solution (<= to make results more diverse)
@@ -2024,12 +2128,17 @@ void RastaConverter::FindBestSolution()
 				(solutions>1 && result<current_distance)) )
 			{
 				// show it only if mutation gives better picture and if a minimum amount of evals have gone by
-				if (result<current_distance && evaluations - last_eval >= 20)
+#ifdef USE_ALLEGRO
+#define show_delta 20
+#else
+#define show_delta 1000
+#endif
+				if (result<current_distance && evaluations - last_eval >= show_delta)
 				{
 					last_eval = evaluations;
 					ShowLastCreatedPicture();
-					textprintf_ex(screen, font, 0, 300, makecol(0xF0,0xF0,0xF0), 0, "Evaluations: %8u  LastBest: %8u  Solutions: %d  Cached insns: %8u", evaluations,last_best_evaluation,(int) m_solutions.size(), line_cache_insn_pool_level);
-					textprintf_ex(screen, font, 0, 310, makecol(0xF0,0xF0,0xF0), 0, "Norm. Dist: %f", NormalizeScore(result));
+					fmtmessage(0, 300, "Evaluations: %8u  LastBest: %8u  Solutions: %d  Cached insns: %8u", evaluations,last_best_evaluation,(int) m_solutions.size(), line_cache_insn_pool_level);
+					fmtmessage(0, 310, "Norm. Dist: %f", NormalizeScore(result));
 					ShowMutationStats();
 				}
 
@@ -2080,11 +2189,12 @@ void RastaConverter::ShowLastCreatedPicture()
 		}
 	}
 
-
+#ifdef USE_ALLEGRO
 	if (desktop_width>=320*3)
 		stretch_blit(output_bitmap,screen,0,0,output_bitmap->w,output_bitmap->h,input_bitmap->w*2,0,output_bitmap->w*2,destination_bitmap->h);
 	else
 		blit(output_bitmap,screen,0,0,m_width,0,m_width,m_height);
+#endif
 }
 
 void RastaConverter::SavePMG(string name)
