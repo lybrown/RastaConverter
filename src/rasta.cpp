@@ -35,12 +35,13 @@ const char *program_version="Beta3";
 #include <iterator>
 #include <unordered_map>
 #include <stdarg.h>
-#include <varargs.h>
 
 #include "rasta.h"
 #include "main.h"
 
 #ifndef USE_ALLEGRO
+#include <limits.h>
+#include <string.h>
 static BITMAP *create_bitmap_ex(int depth, int width, int height)
 {
 	BITMAP *bitmap = new BITMAP;
