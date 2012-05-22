@@ -92,7 +92,7 @@ static void stretch_blit(BITMAP *src, BITMAP *dst,
 	float ry = (float)sh / dh;
 	for (int x = dx; x < dx+dw; ++x) {
 		for (int y = dy; y < dy+dh; ++y) {
-			putpixel(dst, rx * x, ry * y, getpixel(src, x, y));
+			putpixel(dst, x, y, getpixel(src, rx * x, ry * y));
 		}
 	}
 }

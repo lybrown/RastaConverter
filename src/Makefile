@@ -1,7 +1,10 @@
+# vim:set tabstop=4:
+USE_ALLEGRO	= 1
 CXX			= g++
-CXXFLAGS 	= -c -O3 -std=c++0x 
+CXXFLAGS 	= -c -O3 -std=c++0x $(if $(USE_ALLEGRO),-DUSE_ALLEGRO)
 LDFLAGS 	=
-LIBS	 	= -lalleg -lfreeimage -lX11 -lXcursor -lXpm -lXxf86vm -lpthread
+LIBS	 	= -lfreeimage
+LIBS		+= $(if $(USE_ALLEGRO),-lalleg -lX11 -lXcursor -lXpm -lXxf86vm -lpthread)
 SOURCES 	= CommandLineParser.cpp  config.cpp  main.cpp  rasta.cpp  rgb.cpp
 OBJECTS 	= $(SOURCES:.cpp=.o)
 EXECUTABLE	= rastaconv
