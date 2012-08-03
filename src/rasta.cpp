@@ -1228,6 +1228,8 @@ unsigned char ConvertColorRegisterToRawData(e_target t)
 		return 2;
 	case E_COLOR2:
 		return 3;
+	default:
+		break;
 	}
 	assert(0); // this should never happen
 	return -1;
