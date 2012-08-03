@@ -2382,7 +2382,7 @@ void RastaConverter::TestRasterProgram(raster_picture *pic)
 	int x,y;
 	rgb white;
 	rgb black;
-	white.g=white.b=white.r=255;
+	white.g=white.b=white.r=white.a=black.a=255;
 	black.g=black.b=black.r=0;
 
 	for (y=0;y<m_height;++y)
