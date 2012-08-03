@@ -748,7 +748,7 @@ void RastaConverter::SaveLAHC(const char *fn)
 	fprintf(f, "%lu\n",(unsigned long) m_previous_results_index);
 	for (size_t i=0;i<m_previous_results.size();++i)
 	{
-		fprintf(f, "%Lf\n",m_previous_results[i]);
+		fprintf(f, "%lf\n",m_previous_results[i]);
 	}
 	fclose(f);
 }
@@ -2807,7 +2807,7 @@ void RastaConverter::LoadLAHC(string name)
 	for (size_t i=0;i<(size_t) no_elements;++i)
 	{
 		double dst=0;
-		fscanf(f, "%Lf\n",&dst);
+		fscanf(f, "%lf\n",&dst);
 		m_previous_results.push_back(dst);
 	}
 	fclose(f);
