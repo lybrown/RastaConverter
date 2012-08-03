@@ -35,8 +35,10 @@ trigger position.
 
 const char *program_version="Beta6";
 
+#ifndef __GNUC__
 #pragma warning (disable: 4312)
 #pragma warning (disable: 4996)
+#endif
 
 #define M_PI 3.14159265358979323846
 
