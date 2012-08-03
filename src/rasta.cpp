@@ -126,7 +126,7 @@ bool user_closed_app=false;
 
 f_rgb_distance distance_function;
 
-void Message(char *message)
+void Message(const char *message)
 {
 	if (quiet)
 		return;
@@ -135,7 +135,7 @@ void Message(char *message)
 	textprintf_ex(screen, font, 0, 440, makecol(0xF0,0xF0,0xF0), 0, "%s", message);
 }
 
-void Message(char *message, int i)
+void Message(const char *message, int i)
 {
 	if (quiet)
 		return;
@@ -368,7 +368,7 @@ const size_t LINE_CACHE_INSN_POOL_SIZE = 1048576*4;
 SRasterInstruction line_cache_insn_pool[LINE_CACHE_INSN_POOL_SIZE];
 size_t line_cache_insn_pool_level = 0;
 
-char *mem_regs_names[E_TARGET_MAX+1]=
+static const char *mem_regs_names[E_TARGET_MAX+1]=
 {
 	"COLOR0",
 	"COLOR1",
@@ -461,7 +461,7 @@ bool LoadAtariPalette(string filename)
 	return true;
 }
 
-char *mutation_names[E_MUTATION_MAX]=
+static const char *mutation_names[E_MUTATION_MAX]=
 {
 	"PushBack2Prev ",
 	"Copy2NextLine ",
@@ -2710,13 +2710,13 @@ void RastaConverter::SavePMG(string name)
 
 bool GetInstructionFromString(const string& line, SRasterInstruction &instr)
 {
-	static char *load_names[3]=
+	static const char *load_names[3]=
 	{
 		"lda",
 		"ldx",
 		"ldy",
 	};
-	static char *store_names[3]=
+	static const char *store_names[3]=
 	{
 		"sta",
 		"stx",
