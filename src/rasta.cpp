@@ -2500,11 +2500,11 @@ void Wait(int t)
 }
 
 RastaConverter::RastaConverter()
-	: m_last_best_evaluation(0)
-	, m_evaluations(0)
-	, m_currently_mutated_y(0)
-	, init_finished(false)
+	: init_finished(false)
 	, m_best_result(DBL_MAX)
+	, m_currently_mutated_y(0)
+	, m_evaluations(0)
+	, m_last_best_evaluation(0)
 {
 }
 
