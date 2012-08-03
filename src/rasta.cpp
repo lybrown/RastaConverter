@@ -1689,7 +1689,7 @@ e_target RastaConverter::FindClosestColorRegister(int index, int x,int y, bool &
 {
 	distance_t distance;
 	int sprite_bit;
-	int best_sprite_bit;
+	int best_sprite_bit = -1;
 	e_target result=E_COLBAK;
 	distance_t min_distance = DISTANCE_MAX;
 	bool sprite_covers_colbak=false;
@@ -1752,7 +1752,7 @@ e_target RastaConverter::FindClosestColorRegister(int index, int x,int y, bool &
 	}
 
 	// the best color is in sprite, then set the proper bit of the sprite memory and then restart this line
-	if (result>=E_COLPM0 && result<=E_COLPM3)
+	if (result>=E_COLPM0 && result<=E_COLPM3 && best_sprite_bit>=0)
 	{
 		// if PMG bit has been modified, then restart this line, because previous pixels of COLBAK may be covered
 		if (sprites_memory[y][result-E_COLPM0][best_sprite_bit]==false)
