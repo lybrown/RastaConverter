@@ -2,7 +2,7 @@ CXX			= g++
 CXXFLAGS 	= -c -O3 -std=c++0x 
 LDFLAGS 	=
 LIBS	 	= -lalleg -lfreeimage -lX11 -lXcursor -lXpm -lXxf86vm -lpthread
-SOURCES 	= CommandLineParser.cpp  config.cpp  main.cpp  rasta.cpp  rgb.cpp
+SOURCES 	= CommandLineParser.cpp  config.cpp  main.cpp  rasta.cpp  rgb.cpp  mt19937int.cpp
 OBJECTS 	= $(SOURCES:.cpp=.o)
 EXECUTABLE	= rastaconv
 
