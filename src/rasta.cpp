@@ -1103,7 +1103,7 @@ void RastaConverter::LoadOnOffFile(const char *filename)
 	{
 		if (line.empty())
 			continue;
-		std::transform(line.begin(), line.end(), line.begin(), toupper);
+		std::transform(line.begin(), line.end(), line.begin(), ::toupper);
 
 		stringstream sl(line);
 		string reg, value;
