@@ -21,7 +21,7 @@
 
 using namespace std;
 
-#define DISTANCE_MAX 0xffffffff
+#define DISTANCE_MAX INT_MAX
 typedef long long distance_accum_t;
 typedef unsigned int distance_t;
 typedef distance_t (fn_rgb_distance)(const rgb &col1, const rgb &col2);
