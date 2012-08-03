@@ -2982,7 +2982,7 @@ void RastaConverter::SaveRasterProgram(string name, raster_picture *pic)
 	fprintf(fp,"; RastaConverter by Ilmenit v.%s\n",program_version);
 	fprintf(fp,"; InputName: %s\n",cfg.input_file.c_str());
 	fprintf(fp,"; CmdLine: %s\n",cfg.command_line.c_str());
-	fprintf(fp,"; Evaluations: %u\n",m_evaluations);
+	fprintf(fp,"; Evaluations: %llu\n",m_evaluations);
 	fprintf(fp,"; Score: %g\n",NormalizeScore(m_best_result));
 	fprintf(fp,"; ---------------------------------- \n");
 
