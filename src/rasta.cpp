@@ -638,8 +638,6 @@ distance_t RGBCIEDE2000Distance(const rgb &col1, const rgb &col2)
 
 distance_t RGBEuclidianDistance(const rgb &col1, const rgb &col2)
 {
-	int distance=0;
-
 	// euclidian distance
 	int dr = col1.r - col2.r;
 	int dg = col1.g - col2.g;
