@@ -1439,7 +1439,7 @@ void RastaConverter::CreateEmptyRasterPicture(raster_picture *r)
 	i.loose.instruction=E_RASTER_NOP;
 	i.loose.target=E_COLBAK;
 	i.loose.value=0;
-	int size = FreeImage_GetWidth(fbitmap);
+	// int size = FreeImage_GetWidth(fbitmap);
 	// in line 0 we set init registers
 	for (size_t y=0;y<r->raster_lines.size();++y)
 	{
