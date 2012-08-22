@@ -30,6 +30,9 @@
     <ClCompile Include="rgb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mt19937int.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommandLineParser.h">

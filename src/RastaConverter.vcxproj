@@ -171,6 +171,7 @@
     <ClCompile Include="CommandLineParser.cpp" />
     <ClCompile Include="config.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="mt19937int.cpp" />
     <ClCompile Include="rasta.cpp" />
     <ClCompile Include="rgb.cpp" />
   </ItemGroup>
