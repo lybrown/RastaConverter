@@ -63,6 +63,7 @@ struct Configuration {
 	unsigned long long max_evals;
 	FREE_IMAGE_FILTER rescale_filter;
 	e_init_type init_type;
+	bool audio;
 
 	CommandLineParser parser; 
 

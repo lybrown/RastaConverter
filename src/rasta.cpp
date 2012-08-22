@@ -1368,6 +1368,7 @@ bool RastaConverter::SaveScreenData(const char *filename)
 void RastaConverter::SetConfig(Configuration &a_c)
 {
 	cfg=a_c;
+	free_cycles = cfg.audio ? 47 : 53;
 }
 
 /* 8x8 threshold map */
@@ -2181,6 +2182,8 @@ distance_accum_t RastaConverter::ExecuteRasterProgram(raster_picture *pic)
 			memcpy(result_state.target_row, created_picture_targets_row, m_width);
 
 			memcpy(result_state.sprite_data, sprites_memory[y], sizeof result_state.sprite_data);
+
+			pic->saved_regs[y] = reg_a;
 		}
 	}
 
@@ -2655,7 +2658,7 @@ void RastaConverter::FindBestSolution()
 #ifdef USE_ALLEGRO
 	while(!key[KEY_ESC] && !user_closed_app && m_evaluations < cfg.max_evals)
 #else
-	while(m_evaluations < cfg.max_evals)
+	while(m_evaluations < cfg.max_evals && m_best_result != 0)
 #endif
 	{
 		if (cfg.save_period!=0)
@@ -2696,7 +2699,12 @@ void RastaConverter::FindBestSolution()
 
 		double result = ExecuteRasterProgram(&new_picture); ++m_evaluations;
 
-		if (m_evaluations%1000==0)
+#ifdef USE_ALLEGRO
+		unsigned long long eval_period = 1000;
+#else
+		unsigned long long eval_period = 10000;
+#endif
+		if (m_evaluations%eval_period==0)
 		{
 			double rate = 0;
 			clock_t next_rate_check_time = clock();
@@ -2704,7 +2712,7 @@ void RastaConverter::FindBestSolution()
 			if (next_rate_check_time > last_rate_check_time)
 			{
 				double clock_delta = (double)(next_rate_check_time - last_rate_check_time);
-				rate = 1000.0 * (double)CLOCKS_PER_SEC / clock_delta;
+				rate = eval_period * (double)CLOCKS_PER_SEC / clock_delta;
 
 				// clamp the rate if it is ridiculous... Allegro uses an unbounded sprintf(). :(
 				if (rate < 0 || rate > 10000000.0)
@@ -2726,9 +2734,11 @@ void RastaConverter::FindBestSolution()
 			{
 				last_eval = m_evaluations;
 				ShowLastCreatedPicture();
+#ifdef USE_ALLEGRO
 				fmtmessage(0, 300, "Evaluations: %10llu  LastBest: %10llu  Cached ins: %8u", m_evaluations,m_last_best_evaluation, line_cache_insn_pool_level);
 				fmtmessage(0, 310, "Norm. Dist: %f", NormalizeScore(result));
 				ShowMutationStats();
+#endif
 			}
 
 			if (result<current_distance)
@@ -3163,7 +3173,13 @@ void RastaConverter::SaveRasterProgram(string name, raster_picture *pic)
 		{
 			fprintf(fp,"\tnop ; filler\n");
 		}
-		fprintf(fp,"\tcmp byt2; on zero page so 3 cycles\n");
+		if (cfg.audio) {
+			fprintf(fp,"\tlda $0 ; sample\n"); // 3 cycles
+			fprintf(fp,"\tsta AUDC1\n"); // 4 cycles
+			fprintf(fp,"\tlda #$%x\n", pic->saved_regs[y]); // 2 cycles
+		} else {
+			fprintf(fp,"\tcmp byt2; on zero page so 3 cycles\n");
+		}
 	}
 	fprintf(fp,"; ---------------------------------- \n");
 	fclose(fp);

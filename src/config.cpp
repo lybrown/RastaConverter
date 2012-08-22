@@ -214,4 +214,9 @@ void Configuration::Process(int argc, char *argv[])
 #endif
 	string max_evals_value = parser.getValue("max_evals",DEFAULT_MAX_EVALS);
 	max_evals=String2Value<unsigned long long>(max_evals_value);
+
+	if (parser.switchExists("audio"))
+		audio=true;
+	else
+		audio=false;
 }

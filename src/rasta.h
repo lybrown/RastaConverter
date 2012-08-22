@@ -194,6 +194,7 @@ struct raster_line {
 struct raster_picture {
 	unsigned char mem_regs_init[E_TARGET_MAX];
 	vector < raster_line > raster_lines;
+	unsigned char saved_regs[240];
 	raster_picture()
 	{
 	}

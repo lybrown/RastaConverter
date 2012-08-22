@@ -126,6 +126,12 @@ Command line options:
   RastaConverter will save the current solution and exit when this limit is
   reached.
 
+/audio
+  If this switch exists then RastaConverter allocates 6 cycles in the raster
+  program for digital audio. This can be combined with the normal 3 cycles NOP
+  waste to make room for a "LDA ZPAGE, STA AUDC1, LDA PREVIOUS" sequence every
+  raster line.
+
 /onoff=OnOff File
   Text file that describes where to turn on and turn off usable registers. The format of each line in "OnOff file" is:
 
