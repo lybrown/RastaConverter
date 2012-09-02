@@ -17,7 +17,9 @@ liable for any damage caused due to use of this code even if incidental.
 #pragma once
 #endif // _MSC_VER > 1000
 
+#ifndef __GNUC__
 #pragma warning (disable:4786)
+#endif
 
 // Standard Libs
 

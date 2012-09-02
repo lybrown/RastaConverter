@@ -35,8 +35,10 @@ trigger position.
 
 const char *program_version="Beta6";
 
+#ifndef __GNUC__
 #pragma warning (disable: 4312)
 #pragma warning (disable: 4996)
+#endif
 
 #define M_PI 3.14159265358979323846
 
@@ -56,7 +58,6 @@ const char *program_version="Beta6";
 #include <float.h>
 #include <iostream>
 #include <fstream>
-#include <strstream>
 #include <sstream>
 #include <ctype.h>
 #include <iomanip>
@@ -215,7 +216,7 @@ bool user_closed_app=false;
 
 f_rgb_distance distance_function;
 
-void Message(char *message)
+void Message(const char *message)
 {
 	if (quiet)
 		return;
@@ -226,7 +227,7 @@ void Message(char *message)
 	fmtmessage(0, 440, "%s", message);
 }
 
-void Message(char *message, int i)
+void Message(const char *message, int i)
 {
 	if (quiet)
 		return;
@@ -460,7 +461,7 @@ const size_t LINE_CACHE_INSN_POOL_SIZE = 1048576*4;
 SRasterInstruction line_cache_insn_pool[LINE_CACHE_INSN_POOL_SIZE];
 size_t line_cache_insn_pool_level = 0;
 
-char *mem_regs_names[E_TARGET_MAX+1]=
+static const char *mem_regs_names[E_TARGET_MAX+1]=
 {
 	"COLOR0",
 	"COLOR1",
@@ -553,7 +554,7 @@ bool LoadAtariPalette(string filename)
 	return true;
 }
 
-char *mutation_names[E_MUTATION_MAX]=
+static const char *mutation_names[E_MUTATION_MAX]=
 {
 	"PushBack2Prev ",
 	"Copy2NextLine ",
@@ -730,8 +731,6 @@ distance_t RGBCIEDE2000Distance(const rgb &col1, const rgb &col2)
 
 distance_t RGBEuclidianDistance(const rgb &col1, const rgb &col2)
 {
-	int distance=0;
-
 	// euclidian distance
 	int dr = col1.r - col2.r;
 	int dg = col1.g - col2.g;
@@ -842,7 +841,7 @@ void RastaConverter::SaveLAHC(const char *fn)
 	fprintf(f, "%lu\n",(unsigned long) m_previous_results_index);
 	for (size_t i=0;i<m_previous_results.size();++i)
 	{
-		fprintf(f, "%Lf\n",m_previous_results[i]);
+		fprintf(f, "%lf\n",m_previous_results[i]);
 	}
 	fclose(f);
 }
@@ -1205,7 +1204,7 @@ void RastaConverter::LoadOnOffFile(const char *filename)
 	{
 		if (line.empty())
 			continue;
-		std::transform(line.begin(), line.end(), line.begin(), toupper);
+		std::transform(line.begin(), line.end(), line.begin(), ::toupper);
 
 		stringstream sl(line);
 		string reg, value;
@@ -1329,6 +1328,8 @@ unsigned char ConvertColorRegisterToRawData(e_target t)
 		return 2;
 	case E_COLOR2:
 		return 3;
+	default:
+		break;
 	}
 	assert(0); // this should never happen
 	return -1;
@@ -1543,7 +1544,7 @@ void RastaConverter::CreateEmptyRasterPicture(raster_picture *r)
 	i.loose.instruction=E_RASTER_NOP;
 	i.loose.target=E_COLBAK;
 	i.loose.value=0;
-	int size = FreeImage_GetWidth(fbitmap);
+	// int size = FreeImage_GetWidth(fbitmap);
 	// in line 0 we set init registers
 	for (size_t y=0;y<r->raster_lines.size();++y)
 	{
@@ -1793,7 +1794,7 @@ e_target RastaConverter::FindClosestColorRegister(int index, int x,int y, bool &
 {
 	distance_t distance;
 	int sprite_bit;
-	int best_sprite_bit;
+	int best_sprite_bit = -1;
 	e_target result=E_COLBAK;
 	distance_t min_distance = DISTANCE_MAX;
 	bool sprite_covers_colbak=false;
@@ -1856,7 +1857,7 @@ e_target RastaConverter::FindClosestColorRegister(int index, int x,int y, bool &
 	}
 
 	// the best color is in sprite, then set the proper bit of the sprite memory and then restart this line
-	if (result>=E_COLPM0 && result<=E_COLPM3)
+	if (result>=E_COLPM0 && result<=E_COLPM3 && best_sprite_bit>=0)
 	{
 		// if PMG bit has been modified, then restart this line, because previous pixels of COLBAK may be covered
 		if (sprites_memory[y][result-E_COLPM0][best_sprite_bit]==false)
@@ -2490,7 +2491,7 @@ void RastaConverter::TestRasterProgram(raster_picture *pic)
 	int x,y;
 	rgb white;
 	rgb black;
-	white.g=white.b=white.r=255;
+	white.g=white.b=white.r=white.a=black.a=255;
 	black.g=black.b=black.r=0;
 
 	for (y=0;y<m_height;++y)
@@ -2608,11 +2609,11 @@ void Wait(int t)
 }
 
 RastaConverter::RastaConverter()
-	: m_last_best_evaluation(0)
-	, m_evaluations(0)
-	, m_currently_mutated_y(0)
-	, init_finished(false)
+	: init_finished(false)
 	, m_best_result(DBL_MAX)
+	, m_currently_mutated_y(0)
+	, m_evaluations(0)
+	, m_last_best_evaluation(0)
 {
 }
 
@@ -2832,13 +2833,13 @@ void RastaConverter::SavePMG(string name)
 
 bool GetInstructionFromString(const string& line, SRasterInstruction &instr)
 {
-	static char *load_names[3]=
+	static const char *load_names[3]=
 	{
 		"lda",
 		"ldx",
 		"ldy",
 	};
-	static char *store_names[3]=
+	static const char *store_names[3]=
 	{
 		"sta",
 		"stx",
@@ -2929,7 +2930,7 @@ void RastaConverter::LoadLAHC(string name)
 	for (size_t i=0;i<(size_t) no_elements;++i)
 	{
 		double dst=0;
-		fscanf(f, "%Lf\n",&dst);
+		fscanf(f, "%lf\n",&dst);
 		m_previous_results.push_back(dst);
 	}
 	fclose(f);
@@ -3104,7 +3105,7 @@ void RastaConverter::SaveRasterProgram(string name, raster_picture *pic)
 	fprintf(fp,"; RastaConverter by Ilmenit v.%s\n",program_version);
 	fprintf(fp,"; InputName: %s\n",cfg.input_file.c_str());
 	fprintf(fp,"; CmdLine: %s\n",cfg.command_line.c_str());
-	fprintf(fp,"; Evaluations: %u\n",m_evaluations);
+	fprintf(fp,"; Evaluations: %llu\n",m_evaluations);
 	fprintf(fp,"; Score: %g\n",NormalizeScore(m_best_result));
 	fprintf(fp,"; ---------------------------------- \n");
 
